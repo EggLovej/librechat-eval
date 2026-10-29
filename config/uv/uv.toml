@@ -1,0 +1,6 @@
+# System-wide uv settings for the Docker image (installed as /etc/uv/uv.toml).
+# Applies to every uv / uvx call, including MCP servers started at runtime.
+exclude-newer = "7 days"
+# eMudhra / emSign emergency updates bypass the cooldown; review after 2026-10-27
+exclude-newer-package = { certifi = false, pip = false }
+# constraint-dependencies is ignored by uvx, so the floors live in constraints.txt (UV_CONSTRAINT)

@@ -5,7 +5,8 @@ FROM node:24.22.1-alpine AS node
 
 RUN apk upgrade --no-cache
 RUN apk add --no-cache bash jemalloc
-RUN apk add --no-cache python3 py3-pip uv
+# pip and uv are not taken from apk: uv is pinned below and pip is installed through it with the security floors
+RUN apk add --no-cache python3
 
 # Set environment variable to use jemalloc
 ENV LD_PRELOAD=/usr/lib/libjemalloc.so.2
@@ -13,8 +14,14 @@ ENV LD_PRELOAD=/usr/lib/libjemalloc.so.2
 ENV SCARF_ANALYTICS=false
 
 # Add `uv` for extended MCP support
-COPY --from=ghcr.io/astral-sh/uv:0.9.5-python3.12-alpine /usr/local/bin/uv /usr/local/bin/uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.13.4 /uv /uvx /bin/
 RUN uv --version
+
+# 7-day supply-chain cooldown and certifi/pip floors for every uv / uvx install, MCP servers included.
+# eMudhra / emSign emergency updates bypass the cooldown; review after 2026-10-27
+COPY config/uv/uv.toml config/uv/constraints.txt /etc/uv/
+ENV UV_CONSTRAINT=/etc/uv/constraints.txt
+RUN uv pip install --system --break-system-packages --no-cache pip
 
 # Set configurable max-old-space-size with default
 ARG NODE_MAX_OLD_SPACE_SIZE=6144
